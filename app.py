@@ -32,6 +32,9 @@ class Text(db.Model):
 def healthy():
     return {"healthy": True}, 200
 
+@app.route('/hello')
+def hello():
+    return 'hello', 200
 
 @app.route('/host_name')
 def host_name():

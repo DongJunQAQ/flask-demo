@@ -42,4 +42,3 @@ jobs:
         with:
           push: ${{ github.event_name != 'pull_request' }}  # 仅当非PR事件时才推送镜像，即PR事件只构建镜像不推送
           tags: ${{ steps.meta.outputs.tags }}  # 使用步骤1生成的标签（从 meta 步骤的输出中获取）
-          platforms: linux/amd64

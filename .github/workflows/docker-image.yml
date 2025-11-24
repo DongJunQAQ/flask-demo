@@ -38,7 +38,29 @@ jobs:
         uses: docker/setup-buildx-action@v3  # 使用Buildx插件提供高级构建功能，优化构建流程和性能
 
       - name: Build and push
+        id: build  # 给构建步骤添加ID，方便后续引用
         uses: docker/build-push-action@v6  # 因为该插件是基于Buildx构建镜像的所以需要上面的步骤，且会自动克隆仓库到当前工作环境中
         with:
           push: ${{ github.event_name != 'pull_request' }}  # 仅当非PR事件时才推送镜像，即PR事件只构建镜像不推送
           tags: ${{ steps.meta.outputs.tags }}  # 使用步骤1生成的标签（从 meta 步骤的输出中获取）
+          load: true  # 将构建的镜像加载到本地Docker守护进程（默认Buildx构建后不加载到本地，需手动开启）
+
+      - name: Print image ID and size  # 查询并打印镜像ID和大小
+        if: github.event_name != 'pull_request'  # 仅推送后执行
+        run: |
+          # 获取镜像标签（从meta步骤的输出中获取，取第一个标签即可）
+          IMAGE_TAG=$(echo "${{ steps.meta.outputs.tags }}" | cut -d' ' -f1)
+          
+          echo "=== 镜像基本信息 ==="
+          echo "镜像标签: $IMAGE_TAG"
+          
+          # 1. 打印镜像ID（包括Image ID和Digest）
+          echo -e "\n=== 镜像ID ==="
+          docker inspect --format '{{ .Id }}' $IMAGE_TAG  # Image ID（本地）
+          docker inspect --format '{{ index .RepoDigests 0 }}' $IMAGE_TAG  # Digest（远程推送后的哈希，格式：镜像名@sha256:...）
+          
+          # 2. 打印镜像大小（格式化显示，单位：MB）
+          echo -e "\n=== 镜像大小 ==="
+          IMAGE_SIZE_BYTES=$(docker inspect --format '{{ .Size }}' $IMAGE_TAG)
+          IMAGE_SIZE_MB=$((IMAGE_SIZE_BYTES / 1024 / 1024))
+          echo "大小: $IMAGE_SIZE_MB MB (原始大小: $IMAGE_SIZE_BYTES 字节)"

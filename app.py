@@ -34,7 +34,7 @@ def healthy():
 
 @app.route('/hello')
 def hello():
-    return 'hello1122334477788', 200
+    return 'hello999', 200
 
 @app.route('/host_name')
 def host_name():
